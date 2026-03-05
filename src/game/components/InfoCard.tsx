@@ -1,9 +1,9 @@
 "use client";
 
-import { DinoInfo } from "./MuseumCanvas";
+import { DinoData } from "../data/dinosaurs";
 
 interface InfoCardProps {
-    dinosaur: DinoInfo;
+    dinosaur: DinoData;
     onClose: () => void;
     onStartQuiz: () => void;
     onStartRecording: () => void;
@@ -20,7 +20,7 @@ export default function InfoCard({ dinosaur, onClose, onStartQuiz, onStartRecord
                 <div className="relative h-44 overflow-hidden" style={{ background: `linear-gradient(135deg, ${dinosaur.color}, ${dinosaur.color}99)` }}>
                     <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23fff' fill-opacity='0.4'%3E%3Cpath d='M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10S0 25.523 0 20s4.477-10 10-10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-[5rem] drop-shadow-lg select-none" style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" }}>🦖</span>
+                        <span className="text-[5rem] drop-shadow-lg select-none" style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" }}>{dinosaur.emoji}</span>
                     </div>
                     <button
                         onClick={onClose}
@@ -30,7 +30,7 @@ export default function InfoCard({ dinosaur, onClose, onStartQuiz, onStartRecord
 
                 {/* Content */}
                 <div className="p-7">
-                    <h2 className="text-3xl font-fredoka text-[#3A7D44] mb-1">{dinosaur.species}</h2>
+                    <h2 className="text-3xl font-fredoka text-[#3A7D44] mb-1">{dinosaur.name}</h2>
                     <div className="flex gap-2 mb-5 flex-wrap">
                         <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" style={{ background: dinosaur.color + "22", color: dinosaur.color }}>{dinosaur.period}</span>
                         <span className="px-3 py-1 bg-[#F4A261]/15 text-[#F4A261] rounded-full text-xs font-bold uppercase tracking-wider">{dinosaur.diet}</span>

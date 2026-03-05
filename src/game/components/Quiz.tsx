@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { DinoInfo } from "./MuseumCanvas";
+import { DinoData } from "../data/dinosaurs";
 
 interface QuizProps {
-    dinosaur: DinoInfo;
+    dinosaur: DinoData;
     onComplete: (xpEarned: number) => void;
     onClose: () => void;
 }
@@ -24,7 +24,7 @@ const QUIZ_DB: Record<string, { question: string; options: string[]; correct: nu
 
 export default function Quiz({ dinosaur, onComplete, onClose }: QuizProps) {
     const quiz = QUIZ_DB[dinosaur.id] || {
-        question: `What type of creature was the ${dinosaur.species}?`, options: ["Land", "Water", "Air"], correct: 0,
+        question: `What type of creature was the ${dinosaur.name}?`, options: ["Land", "Water", "Air"], correct: 0,
     };
 
     const [selected, setSelected] = useState<number | null>(null);
@@ -50,7 +50,7 @@ export default function Quiz({ dinosaur, onComplete, onClose }: QuizProps) {
                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl" style={{ background: dinosaur.color + "22" }}>🧠</div>
                     <h2 className="text-2xl font-fredoka text-[#3A7D44]">Quiz Time!</h2>
                 </div>
-                <p className="text-xs font-nunito text-gray-400 mb-5 ml-[3.25rem]">{dinosaur.species}</p>
+                <p className="text-xs font-nunito text-gray-400 mb-5 ml-[3.25rem]">{dinosaur.name}</p>
                 <p className="text-lg font-nunito mb-6 text-gray-700 leading-relaxed">{quiz.question}</p>
 
                 <div className="grid gap-3">
@@ -60,10 +60,10 @@ export default function Quiz({ dinosaur, onComplete, onClose }: QuizProps) {
                             onClick={() => handleAnswer(i)}
                             disabled={isCorrect === true}
                             className={`p-4 rounded-2xl text-left border-2 transition-all duration-300 font-nunito font-bold text-gray-700 ${selected === i
-                                    ? isCorrect
-                                        ? "border-green-400 bg-green-50 scale-[1.02] shadow-md shadow-green-200/50"
-                                        : "border-red-400 bg-red-50"
-                                    : "border-gray-100 hover:border-[#F4A261]/50 hover:bg-orange-50/50 bg-gray-50/80"
+                                ? isCorrect
+                                    ? "border-green-400 bg-green-50 scale-[1.02] shadow-md shadow-green-200/50"
+                                    : "border-red-400 bg-red-50"
+                                : "border-gray-100 hover:border-[#F4A261]/50 hover:bg-orange-50/50 bg-gray-50/80"
                                 }`}
                         >{option}</button>
                     ))}

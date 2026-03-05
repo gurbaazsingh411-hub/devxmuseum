@@ -24,12 +24,17 @@ export class PreloaderScene extends Phaser.Scene {
         });
 
         // Loading text
-        const loadingText = this.add.text(width / 2, height / 2 - 50, "Loading Museum...", {
+        this.add.text(width / 2, height / 2 - 50, "Loading Museum...", {
             fontFamily: "Fredoka, Arial",
             fontSize: "24px",
             color: "#3A7D44",
         }).setOrigin(0.5);
 
+        // Load custom dinosaur textures
+        this.load.image("dino-trex", "/assets/images/trex.png");
+        this.load.image("dino-stego", "/assets/images/stego.png");
+        this.load.image("dino-aquatic", "/assets/images/aquatic.png");
+        this.load.image("dino-raptor", "/assets/images/raptor.png");
     }
 
     create() {

@@ -130,22 +130,41 @@ export class MuseumScene extends Phaser.Scene {
             const dino = this.add.container(pos.x, pos.y);
             (dino as any).dinoId = data.id;
 
-            // Simple colored box placeholder for now, to be animated
-            const size = 64;
-            const dropShadow = this.add.ellipse(0, size / 2 + 10, size, 20, 0x000000, 0.1);
-            const rect = this.add.rectangle(0, 0, size, size, parseInt(data.color.substring(1), 16), 1);
-            rect.setStrokeStyle(3, 0xffffff);
+            // Texture mapping
+            let textureKey = "";
+            if (data.id === "trex") textureKey = "dino-trex";
+            else if (data.id === "stego") textureKey = "dino-stego";
+            else if (data.id === "mosasaur") textureKey = "dino-aquatic";
+            else if (data.id === "raptor") textureKey = "dino-raptor";
 
-            const emoji = this.add.text(0, 0, data.emoji, { fontSize: '32px' }).setOrigin(0.5);
+            const size = 120; // Larger for sprites
+            const dropShadow = this.add.ellipse(0, 40, 80, 20, 0x000000, 0.15);
 
-            dino.add([dropShadow, rect, emoji]);
+            let visual: Phaser.GameObjects.GameObject;
+
+            if (textureKey) {
+                const sprite = this.add.sprite(0, 0, textureKey);
+                // Scale as needed (AI images are large)
+                sprite.setDisplaySize(size, size);
+                visual = sprite;
+            } else {
+                // Better placeholder for others
+                const rect = this.add.rectangle(0, 0, 64, 64, parseInt(data.color.substring(1), 16), 1);
+                rect.setStrokeStyle(3, 0xffffff);
+                const emoji = this.add.text(0, 0, data.emoji, { fontSize: '32px' }).setOrigin(0.5);
+                dino.add(emoji);
+                visual = rect;
+            }
+
+            dino.addAt(dropShadow, 0);
+            dino.addAt(visual, 1);
             this.dinos.add(dino);
 
-            // Lazy idle animation
+            // Fun active animation
             this.tweens.add({
-                targets: [rect, emoji],
-                y: -5,
-                duration: 1500 + Math.random() * 500,
+                targets: visual,
+                y: -10,
+                duration: 1000 + Math.random() * 1000,
                 yoyo: true,
                 repeat: -1,
                 ease: 'Sine.easeInOut'

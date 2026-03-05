@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { ALL_DINOS, DinoData } from "@/game/data/dinosaurs";
 import { GameState, loadGameState, saveGameState, addCoins, spendCoins, unlockDino, calculateIdleIncome } from "@/game/utils/gameState";
 import DinoCard from "@/game/components/DinoCard";
+import InfoCard from "@/game/components/InfoCard";
 import RecordModal from "@/game/components/RecordModal";
 import Quiz from "@/game/components/Quiz";
 
@@ -175,21 +176,47 @@ export default function MuseumPage() {
 
       {/* ─── INTERACTION MODALS ─── */}
       {phase === "interacting" && activeDino && (
-        <div className="absolute inset-0 z-40 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeSlideUp" onClick={closeInteraction}>
-          <div className="max-w-xs w-full" onClick={e => e.stopPropagation()}>
-            <DinoCard
-              dino={activeDino}
-              isUnlocked={gameState.unlockedDinosaurs.includes(activeDino.id)}
-              hasRecording={!!gameState.soundRecordings[activeDino.id]}
-              customName={gameState.customNames[activeDino.id]}
-              coins={gameState.coins}
-              onUnlock={() => handleUnlock(activeDino)}
-              onRecord={() => setPhase("recording")}
-              onPlaySound={() => handlePlaySound(activeDino.id)}
-              onRename={(n) => setGameState(s => ({ ...s!, customNames: { ...s!.customNames, [activeDino.id]: n } }))}
+        <div className="absolute inset-0 z-40" onClick={closeInteraction}>
+          {!gameState.unlockedDinosaurs.includes(activeDino.id) ? (
+            <InfoCard
+              dinosaur={activeDino}
+              onClose={closeInteraction}
+              onStartQuiz={() => setPhase("quiz")}
+              onStartRecording={() => setPhase("recording")}
             />
-          </div>
+          ) : (
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeSlideUp">
+              <div className="max-w-xs w-full" onClick={e => e.stopPropagation()}>
+                <DinoCard
+                  dino={activeDino}
+                  isUnlocked={true}
+                  hasRecording={!!gameState.soundRecordings[activeDino.id]}
+                  customName={gameState.customNames[activeDino.id]}
+                  coins={gameState.coins}
+                  onUnlock={() => { }}
+                  onRecord={() => setPhase("recording")}
+                  onPlaySound={() => handlePlaySound(activeDino.id)}
+                  onRename={(n) => setGameState(s => ({ ...s!, customNames: { ...s!.customNames, [activeDino.id]: n } }))}
+                />
+              </div>
+            </div>
+          )}
         </div>
+      )}
+
+      {/* ─── QUIZ MODAL ─── */}
+      {phase === "quiz" && activeDino && (
+        <Quiz
+          dinosaur={activeDino}
+          onClose={() => setPhase("interacting")}
+          onComplete={(xp) => {
+            const newState = unlockDino(gameState, activeDino.id);
+            const withXp = { ...newState, xp: newState.xp + xp };
+            setGameState(withXp);
+            saveGameState(withXp);
+            setPhase("interacting");
+          }}
+        />
       )}
 
       {/* ─── RECORDING MODAL ─── */}
