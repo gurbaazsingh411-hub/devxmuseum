@@ -35,6 +35,10 @@ export class PreloaderScene extends Phaser.Scene {
         this.load.image("dino-stego", "/assets/images/stego.png");
         this.load.image("dino-aquatic", "/assets/images/aquatic.png");
         this.load.image("dino-raptor", "/assets/images/raptor.png");
+
+        // Environment Decorations
+        this.load.image("deco-pillar", "/assets/images/pillar.png");
+        this.load.image("deco-tree", "/assets/images/tree.png");
     }
 
     create() {

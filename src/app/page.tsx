@@ -171,6 +171,14 @@ export default function MuseumPage() {
               {totalIncomePerSec > 0 && <p className="font-nunito text-[11px] text-[#F4A261] font-bold mt-0.5">+{totalIncomePerSec}/s</p>}
             </div>
           </div>
+
+          {/* Mobile Interact Button (Floating bottom right) */}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("mobile_interact"))}
+            className="fixed bottom-8 right-8 w-20 h-20 bg-[#5DBB63] text-white rounded-full shadow-2xl flex items-center justify-center text-3xl pointer-events-auto active:scale-90 transition-transform md:hidden border-4 border-white animate-pulseGlow"
+          >
+            ✋
+          </button>
         </div>
       )}
 
@@ -214,6 +222,10 @@ export default function MuseumPage() {
             const withXp = { ...newState, xp: newState.xp + xp };
             setGameState(withXp);
             saveGameState(withXp);
+
+            // Trigger visual effects in Phaser
+            window.dispatchEvent(new CustomEvent("dino_unlocked"));
+
             setPhase("interacting");
           }}
         />
