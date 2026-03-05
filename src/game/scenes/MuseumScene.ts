@@ -34,8 +34,9 @@ export class MuseumScene extends Phaser.Scene {
         // Setup world bounds
         this.physics.world.setBounds(0, 0, 3000, 2000);
 
-        // Draw habitats
+        // Draw habitats & Ground Textures
         this.drawHabitats();
+        this.drawGroundTextures();
 
         // Setup player
         this.player = this.physics.add.sprite(1500, 1000, "") as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
@@ -73,25 +74,29 @@ export class MuseumScene extends Phaser.Scene {
         this.dinos = this.add.group();
         this.createDinosaurs();
 
-        // Interaction Prompt
+        // Interaction Prompt (Glassmorphism style)
         this.interactionPrompt = this.add.text(0, 0, '✨ Tap to Interact ✨', {
             fontFamily: 'Fredoka, sans-serif',
-            fontSize: '16px',
+            fontSize: '18px',
             color: '#3E2723',
-            backgroundColor: '#FFF8E7',
-            padding: { x: 12, y: 8 },
+            backgroundColor: 'rgba(255, 255, 255, 0.4)',
+            padding: { x: 16, y: 10 },
             stroke: '#F4A261',
-            strokeThickness: 2
+            strokeThickness: 2,
+            shadow: { offsetX: 0, offsetY: 0, color: '#000', blur: 10, fill: true }
         }).setOrigin(0.5, 1).setDepth(200).setVisible(false);
 
         this.tweens.add({
             targets: this.interactionPrompt,
-            scale: 1.1,
+            scale: 1.05,
             duration: 800,
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut'
         });
+
+        // Add God Rays
+        this.createGodRays();
 
         // Listen for new recorded audio from React
         window.addEventListener("dino_recorded_sound", (e: any) => {
@@ -212,6 +217,11 @@ export class MuseumScene extends Phaser.Scene {
             g.fillRect(-30, -110, 60, 15); // Top cap
             g.fillRect(-30, 95, 60, 15);  // Base cap
 
+            // Detail lines
+            g.lineStyle(2, 0xD7CCC8, 0.5);
+            g.lineBetween(-10, -90, -10, 90);
+            g.lineBetween(10, -90, 10, 90);
+
             container.add([shadow, g]);
             container.setDepth(p.y / 10).setAlpha(0.9);
         });
@@ -226,21 +236,41 @@ export class MuseumScene extends Phaser.Scene {
             // Trunk Shadow
             const shadow = this.add.ellipse(0, 65, 80, 25, 0x000000, 0.15);
 
-            // Trunk
+            // Trunk (Detailed)
             g.fillStyle(0x5D4037, 1);
             g.fillRect(-8, 0, 16, 60);
+            g.fillStyle(0x3E2723, 1);
+            g.fillRect(-8, 0, 4, 60); // Bark detail
 
-            // Foliage
+            // Foliage (Multi-layered)
             const treeColor = [0x3A7D44, 0x2E7D32, 0x1B5E20][Math.floor(Math.random() * 3)];
+            const darker = Phaser.Display.Color.IntegerToColor(treeColor).darken(15).color;
+
+            g.fillStyle(darker, 1);
+            g.fillCircle(0, -10, 40);
             g.fillStyle(treeColor, 1);
             g.fillCircle(0, -10, 35);
             g.fillCircle(-25, 5, 25);
             g.fillCircle(25, 5, 25);
             g.fillCircle(0, -35, 25);
 
+            // Highlights
+            g.fillStyle(0xFFFFFF, 0.1);
+            g.fillCircle(-5, -20, 15);
+
             treeContainer.add([shadow, g]);
             treeContainer.setDepth(ty / 10);
             treeContainer.setScale(0.8 + Math.random() * 0.5);
+
+            // Subtle sway
+            this.tweens.add({
+                targets: treeContainer,
+                angle: 1.5,
+                duration: 2500 + Math.random() * 2000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
         }
     }
 
@@ -260,6 +290,66 @@ export class MuseumScene extends Phaser.Scene {
         // Jungle Zone (Bottom Full)
         this.add.rectangle(1500, 1500, 3000, 1000, parseInt(hJungle.bg.substring(1), 16)).setOrigin(0.5);
         this.add.text(1500, 1100, `${hJungle.emoji} ${hJungle.name}`, { fontFamily: 'Fredoka', fontSize: '48px', color: hJungle.color }).setOrigin(0.5).setAlpha(0.2);
+    }
+
+    private drawGroundTextures() {
+        const g = this.add.graphics();
+        g.setDepth(0);
+
+        // Fossil Zone Pebbles
+        g.fillStyle(0x8D6E63, 0.2);
+        for (let i = 0; i < 200; i++) {
+            g.fillCircle(Math.random() * 1500, Math.random() * 1000, 2 + Math.random() * 4);
+        }
+
+        // Aquatic Zone Ripples
+        g.fillStyle(0xFFFFFF, 0.05);
+        for (let i = 0; i < 60; i++) {
+            const rx = 1500 + Math.random() * 1500;
+            const ry = Math.random() * 1000;
+            g.fillEllipse(rx, ry, 30 + Math.random() * 40, 5 + Math.random() * 5);
+        }
+
+        // Jungle Zone Grass Tufts
+        g.lineStyle(2, 0x2E7D32, 0.3);
+        for (let i = 0; i < 300; i++) {
+            const gx = Math.random() * 3000;
+            const gy = 1000 + Math.random() * 1000;
+            g.beginPath();
+            g.moveTo(gx, gy);
+            g.lineTo(gx - 4, gy - 8);
+            g.moveTo(gx, gy);
+            g.lineTo(gx + 4, gy - 8);
+            g.strokePath();
+        }
+    }
+
+    private createGodRays() {
+        for (let i = 0; i < 8; i++) {
+            const ray = this.add.graphics();
+            ray.fillStyle(0xFFFFFF, 0.03);
+            const x = Math.random() * 3000;
+            ray.fillTriangle(x, 0, x - 150, 2000, x + 150, 2000);
+            ray.setDepth(500);
+
+            this.tweens.add({
+                targets: ray,
+                alpha: 0.08,
+                duration: 3000 + Math.random() * 2000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+
+            this.tweens.add({
+                targets: ray,
+                x: '+=50',
+                duration: 5000 + Math.random() * 3000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
     }
 
     private createDinosaurs() {
@@ -294,16 +384,26 @@ export class MuseumScene extends Phaser.Scene {
             else this.drawGenericDino(graphics, color);
 
             const dropShadow = this.add.ellipse(0, 45, 80, 20, 0x000000, 0.15);
-            const emojiLabel = this.add.text(0, -60, data.emoji, { fontSize: '24px' }).setOrigin(0.5).setAlpha(0.6);
+            const emojiLabel = this.add.text(0, -70, data.emoji, { fontSize: '24px' }).setOrigin(0.5).setAlpha(0.5);
 
             dinoContainer.add([dropShadow, graphics, emojiLabel]);
             this.dinos.add(dinoContainer);
 
-            // Active idle animation
+            // Active idle animation (Bounce)
             this.tweens.add({
                 targets: graphics,
                 y: -15,
                 duration: 1200 + Math.random() * 800,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+
+            // Breathing effect
+            this.tweens.add({
+                targets: graphics,
+                scaleX: 1.05,
+                duration: 2000 + Math.random() * 1000,
                 yoyo: true,
                 repeat: -1,
                 ease: 'Sine.easeInOut'
@@ -322,72 +422,131 @@ export class MuseumScene extends Phaser.Scene {
     }
 
     private drawTrex(g: Phaser.GameObjects.Graphics, color: number) {
+        const darker = Phaser.Display.Color.IntegerToColor(color).darken(20).color;
+        const lighter = Phaser.Display.Color.IntegerToColor(color).brighten(20).color;
+
+        // Tail
+        g.fillStyle(darker, 1);
+        g.fillTriangle(-30, 0, -85, 25, -30, 25);
         // Body
         g.fillStyle(color, 1);
         g.fillEllipse(0, 0, 80, 60);
+        g.fillStyle(lighter, 0.3); // Highlight
+        g.fillEllipse(0, -10, 60, 30);
         // Head
+        g.fillStyle(color, 1);
         g.fillEllipse(35, -35, 50, 40);
-        // Tail
-        g.fillTriangle(-30, 0, -85, 25, -30, 25);
+        g.fillStyle(darker, 1); // Jaw line
+        g.fillRect(20, -25, 60, 5);
+        // Underbelly
+        g.fillStyle(0xFFFFFF, 0.2);
+        g.fillEllipse(0, 15, 60, 20);
         // Legs
-        g.fillRoundedRect(10, 20, 15, 30, 5);
-        g.fillRoundedRect(-15, 20, 15, 30, 5);
-        // Eye
+        g.fillStyle(darker, 1);
+        g.fillRoundedRect(10, 20, 18, 32, 6);
+        g.fillRoundedRect(-15, 20, 18, 32, 6);
+        // Eye (Glow hint)
         g.fillStyle(0xFFFFFF, 1);
-        g.fillCircle(50, -40, 6);
+        g.fillCircle(50, -40, 7);
+        g.fillStyle(0xFF0000, 0.5);
+        g.fillCircle(50, -40, 9); // Glow
         g.fillStyle(0x000000, 1);
         g.fillCircle(52, -40, 3);
+        // Teeth
+        g.fillStyle(0xFFFFFF, 1);
+        for (let i = 0; i < 3; i++) g.fillTriangle(40 + i * 10, -20, 45 + i * 10, -12, 50 + i * 10, -20);
     }
 
     private drawStego(g: Phaser.GameObjects.Graphics, color: number) {
+        const darker = Phaser.Display.Color.IntegerToColor(color).darken(20).color;
+        const lighter = Phaser.Display.Color.IntegerToColor(color).brighten(20).color;
+
         // Body
         g.fillStyle(color, 1);
         g.fillEllipse(0, 0, 95, 55);
-        // Plates
-        g.fillStyle(color, 0.85);
+        g.fillStyle(lighter, 0.2);
+        g.fillEllipse(0, -10, 70, 25);
+        // Plates (Layered)
         for (let i = -45; i <= 45; i += 22) {
-            g.fillTriangle(i, -25, i - 18, -50, i + 18, -25);
+            g.fillStyle(darker, 1);
+            g.fillTriangle(i, -25, i - 20, -52, i + 20, -25);
+            g.fillStyle(color, 1);
+            g.fillTriangle(i, -25, i - 12, -45, i + 12, -25);
         }
         // Head
         g.fillStyle(color, 1);
         g.fillCircle(55, 15, 18);
-        // Tail
-        g.fillTriangle(-45, 5, -90, 15, -45, 15);
+        g.fillStyle(darker, 1);
+        g.fillCircle(55, 15, 12);
+        // Tail (Spiky)
+        g.fillStyle(darker, 1);
+        g.fillTriangle(-45, 5, -95, 15, -45, 15);
+        g.fillTriangle(-85, 10, -105, 0, -85, 20); // Spikes
+        // Underbelly
+        g.fillStyle(0x000000, 0.1);
+        g.fillEllipse(0, 20, 70, 10);
         // Legs
+        g.fillStyle(darker, 1);
         g.fillRoundedRect(18, 18, 14, 28, 4);
         g.fillRoundedRect(-32, 18, 14, 28, 4);
     }
 
     private drawMosasaur(g: Phaser.GameObjects.Graphics, color: number) {
+        const darker = Phaser.Display.Color.IntegerToColor(color).darken(25).color;
+        const lighter = Phaser.Display.Color.IntegerToColor(color).brighten(30).color;
+
+        // Fin reflections
+        g.fillStyle(lighter, 0.3);
+        g.fillEllipse(25, 25, 40, 20);
         // Body
         g.fillStyle(color, 1);
         g.fillEllipse(0, 0, 120, 40);
+        g.fillStyle(lighter, 0.4);
+        g.fillEllipse(0, -10, 100, 15);
         // Flippers
+        g.fillStyle(darker, 1);
         g.fillEllipse(25, 20, 35, 18);
         g.fillEllipse(-25, 20, 35, 18);
         // Tail fin
-        g.fillTriangle(-55, 0, -90, -25, -90, 25);
+        g.fillTriangle(-55, 0, -95, -30, -90, 30);
         // Snout
-        g.fillTriangle(55, -12, 90, 0, 55, 12);
+        g.fillStyle(color, 1);
+        g.fillTriangle(55, -12, 95, 0, 55, 12);
         // Eye
         g.fillStyle(0xFFFFFF, 1);
-        g.fillCircle(60, -6, 5);
+        g.fillCircle(65, -6, 5);
+        g.fillStyle(0x00BFFF, 0.4);
+        g.fillCircle(65, -6, 8); // Water glow
     }
 
     private drawRaptor(g: Phaser.GameObjects.Graphics, color: number) {
+        const darker = Phaser.Display.Color.IntegerToColor(color).darken(20).color;
+        const lighter = Phaser.Display.Color.IntegerToColor(color).brighten(25).color;
+
+        // Tail
+        g.fillStyle(darker, 1);
+        g.fillTriangle(-35, -12, -105, -28, -35, 12);
         // Body
         g.fillStyle(color, 1);
         g.fillEllipse(0, 0, 75, 50);
+        g.fillStyle(lighter, 0.3);
+        g.fillEllipse(0, -15, 50, 20);
         // Head
+        g.fillStyle(color, 1);
         g.fillEllipse(35, -28, 45, 28);
-        // Tail
-        g.fillTriangle(-35, -12, -95, -25, -35, 12);
-        // Legs
-        g.fillRoundedRect(8, 18, 16, 38, 5);
-        g.fillRoundedRect(-24, 18, 16, 38, 5);
         // Eye
-        g.fillStyle(0xFFFFFF, 1);
-        g.fillCircle(50, -35, 5);
+        g.fillStyle(0xFFD700, 1); // Yellow raptor eye
+        g.fillCircle(52, -35, 5);
+        g.fillStyle(0x000000, 1);
+        g.fillCircle(54, -35, 2);
+        // Legs (Strong)
+        g.fillStyle(darker, 1);
+        g.fillRoundedRect(8, 18, 16, 42, 6);
+        g.fillRoundedRect(-24, 18, 16, 42, 6);
+        // Claws
+        g.fillStyle(0x000000, 1);
+        g.fillTriangle(14, 55, 18, 65, 22, 55);
+        g.fillTriangle(-18, 55, -14, 65, -10, 55);
     }
 
     private drawGenericDino(g: Phaser.GameObjects.Graphics, color: number) {
@@ -506,7 +665,7 @@ export class MuseumScene extends Phaser.Scene {
 
         // --- Interaction Handling ---
         if (closestDino && closestDist < INTERACT_RADIUS) {
-            this.interactionPrompt.setPosition(closestDino.x, closestDino.y - 100).setVisible(true);
+            this.interactionPrompt.setPosition(closestDino.x, closestDino.y - 120).setVisible(true);
 
             if (this.nearbyDino !== closestDino.dinoId) {
                 this.nearbyDino = closestDino.dinoId;
