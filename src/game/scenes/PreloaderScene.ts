@@ -30,15 +30,13 @@ export class PreloaderScene extends Phaser.Scene {
             color: "#3A7D44",
         }).setOrigin(0.5);
 
-        // Load custom dinosaur textures
-        this.load.image("dino-trex", "/assets/images/trex.png");
-        this.load.image("dino-stego", "/assets/images/stego.png");
-        this.load.image("dino-aquatic", "/assets/images/aquatic.png");
-        this.load.image("dino-raptor", "/assets/images/raptor.png");
-
-        // Environment Decorations
-        this.load.image("deco-pillar", "/assets/images/pillar.png");
-        this.load.image("deco-tree", "/assets/images/tree.png");
+        // All world graphics are now procedurally drawn in MuseumScene!
+        // No more external image dependencies for core gameplay.
+        this.add.text(width / 2, height / 2 + 50, "Preparing Procedural Habitats...", {
+            fontFamily: "Fredoka, Arial",
+            fontSize: "18px",
+            color: "#3A7D44",
+        }).setOrigin(0.5).setAlpha(0.7);
     }
 
     create() {

@@ -191,7 +191,7 @@ export class MuseumScene extends Phaser.Scene {
     }
 
     private addDecorations() {
-        // Add Pillars to Fossil Zone
+        // Programmatic Pillars (Fossil Zone)
         const pillarCoords = [
             { x: 300, y: 300 }, { x: 1200, y: 300 },
             { x: 300, y: 700 }, { x: 1200, y: 700 },
@@ -199,16 +199,48 @@ export class MuseumScene extends Phaser.Scene {
         ];
 
         pillarCoords.forEach(p => {
-            this.add.image(p.x, p.y, "deco-pillar").setScale(0.5).setDepth(p.y / 10).setAlpha(0.9);
-            this.add.ellipse(p.x, p.y + 70, 90, 30, 0x000000, 0.15).setDepth(p.y / 10 - 1); // Shadow
+            const container = this.add.container(p.x, p.y);
+            const g = this.add.graphics();
+
+            // Column Shadow
+            const shadow = this.add.ellipse(0, 75, 90, 30, 0x000000, 0.15);
+
+            // Pillar Body
+            g.fillStyle(0xF5F0E6, 1);
+            g.fillRoundedRect(-20, -100, 40, 200, 5);
+            g.fillStyle(0xE8DCC5, 1);
+            g.fillRect(-30, -110, 60, 15); // Top cap
+            g.fillRect(-30, 95, 60, 15);  // Base cap
+
+            container.add([shadow, g]);
+            container.setDepth(p.y / 10).setAlpha(0.9);
         });
 
-        // Add Trees to Jungle Zone
-        for (let i = 0; i < 24; i++) {
+        // Programmatic Trees (Jungle Zone)
+        for (let i = 0; i < 30; i++) {
             const tx = Math.random() * 3000;
             const ty = 1100 + Math.random() * 850;
-            const tree = this.add.image(tx, ty, "deco-tree").setScale(0.4 + Math.random() * 0.4).setDepth(ty / 10).setAlpha(1);
-            this.add.ellipse(tx, ty + 120, 100, 40, 0x000000, 0.15).setDepth(ty / 10 - 1);
+            const treeContainer = this.add.container(tx, ty);
+            const g = this.add.graphics();
+
+            // Trunk Shadow
+            const shadow = this.add.ellipse(0, 65, 80, 25, 0x000000, 0.15);
+
+            // Trunk
+            g.fillStyle(0x5D4037, 1);
+            g.fillRect(-8, 0, 16, 60);
+
+            // Foliage
+            const treeColor = [0x3A7D44, 0x2E7D32, 0x1B5E20][Math.floor(Math.random() * 3)];
+            g.fillStyle(treeColor, 1);
+            g.fillCircle(0, -10, 35);
+            g.fillCircle(-25, 5, 25);
+            g.fillCircle(25, 5, 25);
+            g.fillCircle(0, -35, 25);
+
+            treeContainer.add([shadow, g]);
+            treeContainer.setDepth(ty / 10);
+            treeContainer.setScale(0.8 + Math.random() * 0.5);
         }
     }
 
@@ -247,49 +279,123 @@ export class MuseumScene extends Phaser.Scene {
 
             if (!pos) return;
 
-            const dino = this.add.container(pos.x, pos.y);
-            (dino as any).dinoId = data.id;
+            const dinoContainer = this.add.container(pos.x, pos.y);
+            (dinoContainer as any).dinoId = data.id;
 
-            // Texture mapping
-            let textureKey = "";
-            if (data.id === "trex") textureKey = "dino-trex";
-            else if (data.id === "stego") textureKey = "dino-stego";
-            else if (data.id === "mosasaur") textureKey = "dino-aquatic";
-            else if (data.id === "raptor") textureKey = "dino-raptor";
+            const color = parseInt(data.color.substring(1), 16);
+            const graphics = this.add.graphics();
+            graphics.setDepth(1);
 
-            const size = 120; // Larger for sprites
-            const dropShadow = this.add.ellipse(0, 40, 80, 20, 0x000000, 0.15);
+            // Draw based on type
+            if (data.id === 'trex') this.drawTrex(graphics, color);
+            else if (data.id === 'stego') this.drawStego(graphics, color);
+            else if (data.id === 'mosasaur') this.drawMosasaur(graphics, color);
+            else if (data.id === 'raptor') this.drawRaptor(graphics, color);
+            else this.drawGenericDino(graphics, color);
 
-            let visual: Phaser.GameObjects.GameObject;
+            const dropShadow = this.add.ellipse(0, 45, 80, 20, 0x000000, 0.15);
+            const emojiLabel = this.add.text(0, -60, data.emoji, { fontSize: '24px' }).setOrigin(0.5).setAlpha(0.6);
 
-            if (textureKey) {
-                const sprite = this.add.sprite(0, 0, textureKey);
-                // Scale as needed (AI images are large)
-                sprite.setDisplaySize(size, size);
-                visual = sprite;
-            } else {
-                // Better placeholder for others
-                const rect = this.add.rectangle(0, 0, 64, 64, parseInt(data.color.substring(1), 16), 1);
-                rect.setStrokeStyle(3, 0xffffff);
-                const emoji = this.add.text(0, 0, data.emoji, { fontSize: '32px' }).setOrigin(0.5);
-                dino.add(emoji);
-                visual = rect;
-            }
+            dinoContainer.add([dropShadow, graphics, emojiLabel]);
+            this.dinos.add(dinoContainer);
 
-            dino.addAt(dropShadow, 0);
-            dino.addAt(visual, 1);
-            this.dinos.add(dino);
-
-            // Fun active animation
+            // Active idle animation
             this.tweens.add({
-                targets: visual,
-                y: -10,
-                duration: 1000 + Math.random() * 1000,
+                targets: graphics,
+                y: -15,
+                duration: 1200 + Math.random() * 800,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+
+            this.tweens.add({
+                targets: dropShadow,
+                scaleX: 0.7,
+                alpha: 0.05,
+                duration: 1200 + Math.random() * 800,
                 yoyo: true,
                 repeat: -1,
                 ease: 'Sine.easeInOut'
             });
         });
+    }
+
+    private drawTrex(g: Phaser.GameObjects.Graphics, color: number) {
+        // Body
+        g.fillStyle(color, 1);
+        g.fillEllipse(0, 0, 80, 60);
+        // Head
+        g.fillEllipse(35, -35, 50, 40);
+        // Tail
+        g.fillTriangle(-30, 0, -85, 25, -30, 25);
+        // Legs
+        g.fillRoundedRect(10, 20, 15, 30, 5);
+        g.fillRoundedRect(-15, 20, 15, 30, 5);
+        // Eye
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillCircle(50, -40, 6);
+        g.fillStyle(0x000000, 1);
+        g.fillCircle(52, -40, 3);
+    }
+
+    private drawStego(g: Phaser.GameObjects.Graphics, color: number) {
+        // Body
+        g.fillStyle(color, 1);
+        g.fillEllipse(0, 0, 95, 55);
+        // Plates
+        g.fillStyle(color, 0.85);
+        for (let i = -45; i <= 45; i += 22) {
+            g.fillTriangle(i, -25, i - 18, -50, i + 18, -25);
+        }
+        // Head
+        g.fillStyle(color, 1);
+        g.fillCircle(55, 15, 18);
+        // Tail
+        g.fillTriangle(-45, 5, -90, 15, -45, 15);
+        // Legs
+        g.fillRoundedRect(18, 18, 14, 28, 4);
+        g.fillRoundedRect(-32, 18, 14, 28, 4);
+    }
+
+    private drawMosasaur(g: Phaser.GameObjects.Graphics, color: number) {
+        // Body
+        g.fillStyle(color, 1);
+        g.fillEllipse(0, 0, 120, 40);
+        // Flippers
+        g.fillEllipse(25, 20, 35, 18);
+        g.fillEllipse(-25, 20, 35, 18);
+        // Tail fin
+        g.fillTriangle(-55, 0, -90, -25, -90, 25);
+        // Snout
+        g.fillTriangle(55, -12, 90, 0, 55, 12);
+        // Eye
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillCircle(60, -6, 5);
+    }
+
+    private drawRaptor(g: Phaser.GameObjects.Graphics, color: number) {
+        // Body
+        g.fillStyle(color, 1);
+        g.fillEllipse(0, 0, 75, 50);
+        // Head
+        g.fillEllipse(35, -28, 45, 28);
+        // Tail
+        g.fillTriangle(-35, -12, -95, -25, -35, 12);
+        // Legs
+        g.fillRoundedRect(8, 18, 16, 38, 5);
+        g.fillRoundedRect(-24, 18, 16, 38, 5);
+        // Eye
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillCircle(50, -35, 5);
+    }
+
+    private drawGenericDino(g: Phaser.GameObjects.Graphics, color: number) {
+        g.fillStyle(color, 1);
+        g.fillEllipse(0, 0, 80, 55);
+        g.fillCircle(40, -25, 22);
+        g.fillRoundedRect(12, 18, 14, 32, 5);
+        g.fillRoundedRect(-26, 18, 14, 32, 5);
     }
 
     update() {
